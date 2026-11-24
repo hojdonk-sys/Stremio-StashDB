@@ -141,7 +141,7 @@ async function getStudioScenes(apiKey, studioId, targetCount = 50) {
   }
 }
 
-async function getStudioScenes(apiKey, studioId, targetCount = 50) {
+async function getParentStudioScenes(apiKey, studioId, targetCount = 50) {
   const allScenes = [];
   const perPage = 25;
   const maxPages = Math.ceil(targetCount / perPage);
