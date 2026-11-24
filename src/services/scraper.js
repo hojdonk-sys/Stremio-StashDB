@@ -147,12 +147,12 @@ async function scrape() {
     cache.clear();
     console.log('Cache cleared');
 
-    // Fetch trending scenes from StashDB
-    const targetCount = parseInt(process.env.SCRAPE_COUNT || '100', 10);
+    // Fetch trending scenes from StashDB - 20
+    const targetCount = parseInt(process.env.SCRAPE_COUNT || '20', 10);
     const scenes = await stashdb.getTrendingScenes(config.stashdbApiKey, targetCount);
     console.log(`Found ${scenes.length} trending scenes from StashDB`);
 
-        if (scenes.length === 0) {
+    if (scenes.length === 0) {
       console.log('No trending scenes, continuing to studios...');
     }
 
@@ -166,15 +166,17 @@ async function scrape() {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Process studio scenes - 2 studios
+    // Process studio scenes - 4 studios
     const studios = [
-      { id: 'stashdb-studio1', stashdbId: '39cee498-a9ac-4403-910a-1a0157ad22d8', name: 'Brazzers Exxtra' },
-      { id: 'stashdb-studio2', stashdbId: '0f1d8e2c-627e-4d05-a52e-c821b26cab0c', name: 'Evil Angel' },
+      { id: 'stashdb-studio1', stashdbId: '39cee498-a9ac-4403-910a-1a0157ad22d8', name: 'Brazzers Exxtra', limit: 100 },
+      { id: 'stashdb-studio2', stashdbId: '0f1d8e2c-627e-4d05-a52e-c821b26cab0c', name: 'Evil Angel', limit: 200 },
+      { id: 'stashdb-studio3', stashdbId: '5594ba40-e1ba-4e7e-b2c3-14e9bf101bd5', name: 'Her Limit', limit: 150 },
+      { id: 'stashdb-studio4', stashdbId: 'f23972b2-6337-43cf-89fa-db78eebf008c', name: 'Anal Vids', limit: 250 },
     ];
 
     for (const st of studios) {
       console.log(`Fetching studio: ${st.name}`);
-      const studioScenes = await stashdb.getStudioScenes(config.stashdbApiKey, st.stashdbId, 50);
+      const studioScenes = await stashdb.getStudioScenes(config.stashdbApiKey, st.stashdbId, st.limit);
       console.log(`Found ${studioScenes.length} scenes for ${st.name}`);
       for (const scene of studioScenes) {
         const success = await processScene(scene, config, st.id);

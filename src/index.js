@@ -37,6 +37,16 @@ const manifest = {
       type: 'movie',
       id: 'stashdb-studio2',
       name: 'Evil Angel'
+    },
+    {
+      type: 'movie',
+      id: 'stashdb-studio3',
+      name: 'Her Limit'
+    },
+    {
+      type: 'movie',
+      id: 'stashdb-studio4',
+      name: 'Anal Vids'
     }
   ],
   behaviorHints: {
@@ -66,7 +76,7 @@ const builder = new addonBuilder(manifest);
  * Define catalog handler
  */
 builder.defineCatalogHandler((args) => {
-  if (args.type === 'movie' && ['stashdb-trending', 'stashdb-studio1', 'stashdb-studio2'].includes(args.id)) {
+  if (args.type === 'movie' && ['stashdb-trending', 'stashdb-studio1', 'stashdb-studio2', 'stashdb-studio3', 'stashdb-studio4'].includes(args.id)) {
     return catalogHandler(args);
   }
   return Promise.resolve({ metas: [] });
