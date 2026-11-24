@@ -10,14 +10,35 @@ const TRENDING_SCENES_QUERY = `
         title
         details
         date
-        release_date
-        production_date
-        duration
-        director
-        code
-        created
-        updated
-        studio {
+        [STRIPPED 67 bytes] {
+          id
+          name
+          aliases
+        }
+        tags {
+          name
+          id
+        }
+        images {
+          url
+          width
+          height
+        }
+      }
+      count
+    }
+  }
+`;
+
+const STUDIO_SCENES_QUERY = `
+  query QueryScenes($page: Int!, $studioId: ID!) {
+    queryScenes(input: { page: $page, per_page: 25, sort: DATE, filter: { studios: { value: [$studioId], modifier: INCLUDES } } }) {
+      scenes {
+        id
+        title
+        details
+        date
+        [STRIPPED 67 bytes] {
           id
           name
           aliases
@@ -72,19 +93,45 @@ async function getTrendingScenes(apiKey, targetCount = 100) {
 
       console.log(`  Fetched page ${page}: ${scenes.length} scenes`);
 
-      // Stop if we got fewer scenes than expected (last page)
       if (scenes.length < perPage) {
         break;
       }
 
-      // Small delay between pages
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     return allScenes;
   } catch (error) {
     console.error('StashDB API error:', error.message);
-    return allScenes; // Return what we have so far
+    return allScenes;
+  }
+}
+
+async function getStudioScenes(apiKey, studioId, targetCount = 50) {
+  const allScenes = [];
+  const perPage = 25;
+  const maxPages = Math.ceil(targetCount / perPage);
+  try {
+    for (let page = 1; page <= maxPages; page++) {
+      const response = await axios.post(
+        STASHDB_URL,
+        { query: STUDIO_SCENES_QUERY, variables: { page, studioId } },
+        { headers: { 'apikey': apiKey, 'Content-Type': 'application/json' } }
+      );
+      if (response.data.errors) {
+        console.error('StashDB GraphQL errors:', response.data.errors);
+        break;
+      }
+      const scenes = response.data.data.queryScenes.scenes || [];
+      allScenes.push(...scenes);
+      console.log(`  Fetched studio page ${page}: ${scenes.length} scenes`);
+      if (scenes.length < perPage) break;
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    return allScenes;
+  } catch (error) {
+    console.error('StashDB API error:', error.message);
+    return allScenes;
   }
 }
 
@@ -107,7 +154,6 @@ function formatDateForQuery(dateString) {
  */
 function formatStudioName(studioName) {
   if (!studioName) return null;
-  // Remove non-alphanumeric characters and spaces
   return studioName.replace(/[^a-zA-Z0-9]/g, '');
 }
 
@@ -126,8 +172,8 @@ function buildSearchQuery(scene) {
 
 module.exports = {
   getTrendingScenes,
+  getStudioScenes,
   formatDateForQuery,
   formatStudioName,
   buildSearchQuery
 };
-

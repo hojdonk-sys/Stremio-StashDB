@@ -27,6 +27,16 @@ const manifest = {
           options: ['Trending']
         }
       ]
+    },
+    {
+      type: 'movie',
+      id: 'stashdb-studio1',
+      name: 'Brazzers Exxtra'
+    },
+    {
+      type: 'movie',
+      id: 'stashdb-studio2',
+      name: 'Evil Angel'
     }
   ],
   behaviorHints: {
@@ -56,7 +66,7 @@ const builder = new addonBuilder(manifest);
  * Define catalog handler
  */
 builder.defineCatalogHandler((args) => {
-  if (args.type === 'movie' && args.id === 'stashdb-trending') {
+  if (args.type === 'movie' && ['stashdb-trending', 'stashdb-studio1', 'stashdb-studio2'].includes(args.id)) {
     return catalogHandler(args);
   }
   return Promise.resolve({ metas: [] });
@@ -127,4 +137,3 @@ function startAddon() {
 startAddon();
 
 module.exports = builder;
-

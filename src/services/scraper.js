@@ -54,7 +54,7 @@ function sortByResolution(dataItems) {
 /**
  * Process a single scene: search Easynews and cache if found
  */
-async function processScene(scene, config) {
+async function processScene(scene, config, catalogId = 'stashdb-trending') {
   const searchQuery = stashdb.buildSearchQuery(scene);
   
   if (!searchQuery) {
@@ -99,17 +99,22 @@ async function processScene(scene, config) {
   const urlPrefix = easynews.getUrlPrefix(searchResponse);
   const results = filteredResults.map(item => ({
     url: easynews.buildUrl(urlPrefix, item),
-    filename: item['10'] || item.fn, // Filename
+    filename: item['10'] || item.fn,
     resolution: easynews.getResolution(item),
     codec: easynews.getCodec(item),
-    size: item.size || item.rawSize, // File size in bytes
-    sizeFormatted: easynews.formatSize(item['4'] || item.size || item.rawSize), // Use formatted string or bytes
-    duration: easynews.getDuration(item) // Duration in seconds
+    size: item.size || item.rawSize,
+    sizeFormatted: easynews.formatSize(item['4'] || item.size || item.rawSize),
+    duration: easynews.getDuration(item)
   }));
 
-  // Cache the scene with results
+  // Cache the scene with results + catalog tag
+  const existing = cache.get(scene.id);
+  const catalogs = existing && existing._catalogs ? [...existing._catalogs] : [];
+  if (!catalogs.includes(catalogId)) catalogs.push(catalogId);
+
   cache.set(scene.id, {
     ...scene,
+    _catalogs: catalogs,
     easynewsResults: results
   });
 
@@ -152,17 +157,34 @@ async function scrape() {
       return;
     }
 
-    // Process each scene
+    // Process each scene - trending
     let successCount = 0;
     for (const scene of scenes) {
-      const success = await processScene(scene, config);
+      const success = await processScene(scene, config, 'stashdb-trending');
       if (success) successCount++;
       
       // Small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    console.log(`\nScrape complete: ${successCount}/${scenes.length} scenes cached`);
+    // Process studio scenes - 2 studios
+    const studios = [
+      { id: 'stashdb-studio1', stashdbId: '39cee498-a9ac-4403-910a-1a0157ad22d8', name: 'Brazzers Exxtra' },
+      { id: 'stashdb-studio2', stashdbId: '0f1d8e2c-627e-4d05-a52e-c821b26cab0c', name: 'Evil Angel' },
+    ];
+
+    for (const st of studios) {
+      console.log(`Fetching studio: ${st.name}`);
+      const studioScenes = await stashdb.getStudioScenes(config.stashdbApiKey, st.stashdbId, 50);
+      console.log(`Found ${studioScenes.length} scenes for ${st.name}`);
+      for (const scene of studioScenes) {
+        const success = await processScene(scene, config, st.id);
+        if (success) successCount++;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    console.log(`\nScrape complete: ${successCount} scenes cached`);
     console.log(`Cache size: ${cache.size()} scenes`);
   } catch (error) {
     console.error('Scrape error:', error);
@@ -197,4 +219,3 @@ module.exports = {
   sortByResolution,
   processScene
 };
-

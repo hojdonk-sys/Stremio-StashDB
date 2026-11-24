@@ -1,10 +1,18 @@
 const cache = require('../cache');
 
 /**
- * Catalog handler - returns meta preview objects for all cached scenes
+ * Catalog handler - returns meta preview objects for requested catalog
  */
 function catalogHandler(args) {
-  const scenes = cache.getAll();
+  const allScenes = cache.getAll();
+  const wanted = args.id || 'stashdb-trending';
+
+  // Filter by catalog tag
+  const scenes = allScenes.filter(scene => {
+    // Eski sahnelerde etiket yoksa, trending say
+    if (!scene._catalogs) return wanted === 'stashdb-trending';
+    return scene._catalogs.includes(wanted);
+  });
 
   const metas = scenes.map(scene => {
     // Find landscape poster (width > height)
@@ -32,4 +40,3 @@ function catalogHandler(args) {
 }
 
 module.exports = catalogHandler;
-
