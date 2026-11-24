@@ -55,6 +55,19 @@ function sortByResolution(dataItems) {
  * Process a single scene: search Easynews and cache if found
  */
 async function processScene(scene, config, catalogId = 'stashdb-trending') {
+  // FARK MANTIĞI: Zaten cache'de varsa Easynews'de arama, atla
+  const alreadyCached = cache.get(scene.id);
+  if (alreadyCached && alreadyCached.easynewsResults && alreadyCached.easynewsResults.length > 0) {
+    // Katalog etiketini ekle, yoksa ekle
+    const catalogs = alreadyCached._catalogs ? [...alreadyCached._catalogs] : [];
+    if (!catalogs.includes(catalogId)) {
+      catalogs.push(catalogId);
+      cache.set(scene.id, { ...alreadyCached, _catalogs: catalogs });
+    }
+    console.log(`Skipping already cached: ${scene.title}`);
+    return true;
+  }
+
   const searchQuery = stashdb.buildSearchQuery(scene);
   
   if (!searchQuery) {
@@ -143,9 +156,8 @@ async function scrape() {
 
     const config = { easynewsUsername, easynewsPassword, stashdbApiKey };
 
-    // Clear cache before starting new scrape to replace old data
-    cache.clear();
-    console.log('Cache cleared');
+    // FARK MANTIĞI: Cache'i silme, üzerine ekle
+    console.log(`Keeping existing cache, incremental update... Current cache: ${cache.size()} scenes`);
 
     // Fetch trending scenes from StashDB - 20
     const targetCount = parseInt(process.env.SCRAPE_COUNT || '20', 10);
@@ -171,12 +183,17 @@ async function scrape() {
       { id: 'stashdb-studio1', stashdbId: '39cee498-a9ac-4403-910a-1a0157ad22d8', name: 'Brazzers Exxtra', limit: 100 },
       { id: 'stashdb-studio2', stashdbId: '0f1d8e2c-627e-4d05-a52e-c821b26cab0c', name: 'Evil Angel', limit: 200 },
       { id: 'stashdb-studio3', stashdbId: '5594ba40-e1ba-4e7e-b2c3-14e9bf101bd5', name: 'Her Limit', limit: 150 },
-      { id: 'stashdb-studio4', stashdbId: 'f23972b2-6337-43cf-89fa-db78eebf008c', name: 'Anal Vids', limit: 250 },
+      { id: 'stashdb-studio4', stashdbId: 'f23972b2-6337-43cf-89fa-db78eebf008c', name: 'Anal Vids', limit: 150, isParent: true },
     ];
 
     for (const st of studios) {
       console.log(`Fetching studio: ${st.name}`);
-      const studioScenes = await stashdb.getStudioScenes(config.stashdbApiKey, st.stashdbId, st.limit);
+      let studioScenes;
+if (st.isParent) {
+  studioScenes = await stashdb.getParentStudioScenes(config.stashdbApiKey, st.stashdbId, st.limit);
+} else {
+  studioScenes = await stashdb.getStudioScenes(config.stashdbApiKey, st.stashdbId, st.limit);
+}
       console.log(`Found ${studioScenes.length} scenes for ${st.name}`);
       for (const scene of studioScenes) {
         const success = await processScene(scene, config, st.id);
