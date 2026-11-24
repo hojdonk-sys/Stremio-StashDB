@@ -152,9 +152,8 @@ async function scrape() {
     const scenes = await stashdb.getTrendingScenes(config.stashdbApiKey, targetCount);
     console.log(`Found ${scenes.length} trending scenes from StashDB`);
 
-    if (scenes.length === 0) {
-      console.log('No scenes to process');
-      return;
+        if (scenes.length === 0) {
+      console.log('No trending scenes, continuing to studios...');
     }
 
     // Process each scene - trending

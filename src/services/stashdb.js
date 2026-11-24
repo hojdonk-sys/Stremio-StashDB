@@ -32,7 +32,7 @@ const TRENDING_SCENES_QUERY = `
 
 const STUDIO_SCENES_QUERY = `
   query QueryScenes($page: Int!, $studioId: ID!) {
-    queryScenes(input: { page: $page, per_page: 25, sort: DATE, filter: { studios: { value: [$studioId], modifier: INCLUDES } } }) {
+    queryScenes(input: { page: $page, per_page: 25, sort: TRENDING, filter: { studios: { value: [$studioId], modifier: INCLUDES } } }) {
       scenes {
         id
         title
