@@ -10,10 +10,9 @@ const TRENDING_SCENES_QUERY = `
         title
         details
         date
-        [STRIPPED 67 bytes] {
+        studio {
           id
           name
-          aliases
         }
         tags {
           name
@@ -38,10 +37,9 @@ const STUDIO_SCENES_QUERY = `
         title
         details
         date
-        [STRIPPED 67 bytes] {
+        studio {
           id
           name
-          aliases
         }
         tags {
           name
@@ -131,7 +129,7 @@ function formatStudioName(studioName) {
 }
 
 function buildSearchQuery(scene) {
-  const dateInfo = formatDateForQuery(scene.date || scene.release_date);
+  const dateInfo = formatDateForQuery(scene.date);
   if (!dateInfo) return null;
   const studioName = formatStudioName(scene.studio?.name);
   if (!studioName) return null;
