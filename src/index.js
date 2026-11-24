@@ -130,9 +130,9 @@ function startAddon() {
       console.log(`\n   💡 Tip: Users can browse without config, but need Easynews`);
       console.log(`      credentials to stream videos.\n`);
       
-      // Start the scraper after HTTP server is ready
-      // This ensures Beamup health checks pass before the scraper blocks
-      startScraper();
+       // Start the scraper after HTTP server is ready
+      // Delay 10s so Render can detect the port first
+      setTimeout(startScraper, 10000);
     }).catch(err => {
       console.error('Failed to start HTTP server:', err);
       process.exit(1);
